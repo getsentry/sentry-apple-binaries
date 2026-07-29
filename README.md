@@ -20,9 +20,7 @@ If you want to build from source, use the main [sentry-cocoa](https://github.com
 | Library | Linking | Description |
 |---------|---------|-------------|
 | `Sentry-Static` | Static | Sentry SDK (Swift + ObjC) |
-| `Sentry-Dynamic` | Dynamic | Sentry SDK (Swift + ObjC) |
 | `SentryObjC-Static` | Static | Sentry SDK (ObjC only) |
-| `SentryObjC-Dynamic` | Dynamic | Sentry SDK (ObjC only) |
 
 ## Installation
 
@@ -30,7 +28,7 @@ Add this package to your project via Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/getsentry/sentry-cocoa-binaries.git", from: "9.22.0")
+    .package(url: "https://github.com/getsentry/sentry-apple-binaries.git", from: "9.22.0")
 ]
 ```
 
@@ -40,7 +38,7 @@ Then add the desired library product to your target's dependencies:
 .target(
     name: "YourApp",
     dependencies: [
-        .product(name: "Sentry-Static", package: "sentry-cocoa-binaries"),
+        .product(name: "Sentry-Static", package: "sentry-apple-binaries"),
     ]
 )
 ```
