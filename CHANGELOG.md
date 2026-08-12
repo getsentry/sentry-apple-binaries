@@ -1,5 +1,35 @@
 # Changelog
 
+## 9.26.0
+
+> [!WARNING]
+> The 3rd-party integration packages (SentryCocoaLumberjack, SentryPulse, SentrySwiftLog, SentrySwiftyBeaver) now require Swift 6.1+ to support SPM package traits. Users on older Swift toolchains should pin to an earlier release of these packages.
+
+### Features
+
+- Promote `enableStandaloneAppStartTracing` from `options.experimental` to a top-level option on `Options` (#8715)
+- Add `SentryFromBinary` (default) and `SentryFromSource` SPM package traits to 3rd-party integrations, allowing users to choose between precompiled xcframeworks and building from source. Requires Swift 6.1+ (#8795)
+- Add experimental option `enableUIViewControllerInitSwizzling` that defers `UIViewController` swizzling to first instantiation instead of eagerly discovering and swizzling all subclasses at SDK start. This avoids realizing `@available`-gated `UIViewController` subclasses on OS versions below their gate, which crashes apps on start (#8687).
+- Add screenshot picker to feedback (#8655)
+  - Enable it with `form.enableScreenshot = true` in the `configureForm` callback.
+- Expose transaction as a public event type (#8745)
+
+### Improvements
+
+- Session Replay keeps captured frames in memory for live video encode while still writing PNGs to disk for crash durability. Encode prefers the in-memory image and only falls back to disk for frames recovered after a crash, avoiding a PNG readback on the streaming hot path. (#8636)
+- Remove the per-frame render loop from the Session Replay masking preview. (#8730)
+
+### Fixes
+
+- Fix misleading duplicate SDK detection message: "same binary" → "same address space" (#8710)
+- Fix a race caused by mutating `URLSessionTask.currentRequest` during trace header propagation (#8650)
+- Prevent Session Replay network-detail breadcrumbs from blocking URLSession cancellation on the task monitor (#8497)
+- Fix Session Replay adaptive capture backoff pinning at the maximum interval due to mask compositing being included in the measured capture duration, which could produce single-frame segments that appear stuck on one screen (#8740)
+
+### Internal
+
+- Add internal hybrid SDK APIs to serialize native events and retrieve scope contexts for .NET event processing (#8708)
+
 ## 9.25.0
 
 > [!WARNING]
@@ -20,6 +50,7 @@
   - Session `duration` is now set only when the session ends. Active sessions (including on error increments) no longer emit a bogus `duration`.
 - Fix a race that could prevent consecutive app hangs from being reported (#8627)
 - Fix malformed itms-services URL in SentryDistribution updater (#8567)
+- Fix off-main thread reads of `-[UIApplication applicationState]` (8672)
 
 ## 9.24.0
 
