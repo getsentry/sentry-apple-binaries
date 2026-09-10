@@ -1,5 +1,83 @@
 # Changelog
 
+## 9.28.0
+
+### Features
+
+- Add a `device.event` breadcrumb (`SYSTEM_CLOCK_CHANGE`) when the system clock changes, for example due to a manual time change or NTP sync (#8946)
+- Add Hints API with `beforeSendWithHint` and `beforeBreadcrumbWithHint` callbacks (#8942)
+
+  Use hints to inspect the original source material that produced an event or breadcrumb, and to
+  add or remove attachments before they are sent:
+
+  ```swift
+  SentrySDK.start { options in
+      options.beforeSendWithHint = { event, hint in
+          if let error = hint.originalError as? NSError,
+             error.domain == NSURLErrorDomain {
+              return nil // drop network errors
+          }
+          return event
+      }
+      options.beforeBreadcrumbWithHint = { breadcrumb, hint in
+          if hint.urlRequest?.url?.host == "internal.example.com" {
+              return nil // redact internal traffic
+          }
+          return breadcrumb
+      }
+  }
+  ```
+
+- Add hint parameter to public capture methods on `SentrySDK` (#8955)
+
+  Pass a `Hint` when capturing events or errors to attach metadata that `beforeSendWithHint`
+  can inspect:
+
+  ```swift
+  let hint = Hint()
+  hint.setHintValue("checkout", forKey: "flow")
+  SentrySDK.capture(error: error, hint: hint)
+  ```
+
+- Auto-populate HTTP request and response on hints for network breadcrumbs and HTTP client errors (#8967)
+
+  Network breadcrumbs and HTTP client error events now include the originating `URLRequest` and
+  `HTTPURLResponse` on the hint, so callbacks can inspect status codes, headers, or URLs:
+
+  ```swift
+  options.beforeBreadcrumbWithHint = { breadcrumb, hint in
+      if let statusCode = hint.httpResponse?.statusCode,
+         statusCode == 401 {
+          breadcrumb.level = .warning
+      }
+      return breadcrumb
+  }
+  ```
+
+- Include screenshot and view hierarchy attachments in `hint.attachments` before `beforeSendWithHint` runs (#8989)
+
+  Screenshot and view hierarchy attachments are now available in `hint.attachments` when
+  `beforeSendWithHint` is called, so they can be inspected or removed:
+
+  ```swift
+  options.beforeSendWithHint = { event, hint in
+      hint.attachments = hint.attachments.filter { $0.filename != "screenshot.png" }
+      return event
+  }
+  ```
+
+### Fixes
+
+- Prevent relevant view controller traversal from recursively loading parent views and invoking `viewDidLoad` twice when tracing is enabled. (#8941)
+- Classify MetricKit hangs over 500 ms as errors. (#8948)
+- Prevent Session Replay video encoding from reusing pixel buffers retained by AVFoundation. (#8950)
+- Prevent deadlock when a signal interrupts memory allocation by avoiding thread-local storage and unsafe formatting during signal handling. (#8271)
+- Remove invalid DWARF references from `SentryObjC-Static` XCFrameworks to prevent `dsymutil` missing-object warnings. (#8979)
+
+### Internal
+
+- Fix `SentrySDK.internal.replay.replayId` returning nil for buffered replays (#8976)
+
 ## 9.27.0
 
 > [!NOTE]
@@ -20,22 +98,18 @@
   - `pause()` suspends recording until `resume()` and remains paused across background and foreground transitions and automatic replay restarts in the same process.
   - `resume()` continues the same manually paused replay.
   - `flush()` sends the current replay data to Sentry, or starts a full-session replay when recording is stopped.
-
-### Improvements
-
-- Install idle Session Replay recovery infrastructure at zero sample rates. (#8865)
-
-### Features
-
 - Copy `app.vitals.start.type` and `app.vitals.start.screen` onto standalone `app.start` children, including `app.start.extended` and user descendants (#8888)
 - Add `maxFeatureFlags` option to configure how many feature flag evaluations the scope retains, matching sentry-java. Defaults to 100 (#8858)
+- Log a warning when `SentrySDK.start` is called again without `close()`. Reinitialization still runs and remains unsupported (#8928)
 - Add `SentrySDK.internal.envelope.captureNonTerminating` for hybrid SDKs, which keeps the current session running and reports it with the `unhandled` status when an unhandled exception doesn't terminate the process (#8654)
 - Add `SentrySDK.internal.envelope.updateSessionForDroppedEventNonTerminating` so hybrid SDKs can update the native session when an error is dropped by sampling, without sending an envelope (#8907)
+- Expose continuous profiling configuration on `SentryObjCOptions` via `configureProfiling` and `SentryObjCProfileOptions` (#8937)
 
 ### Fixes
 
 - Silence spurious ERROR log in `SentryCrashCxaThrowSwapper` for empty sections (#8915)
 - Stop recording touch events while Session Replay is paused. (#8887)
+- Synchronize access to the current trace profiler in debug and test builds. (#8936)
 
 ### Internal
 
@@ -179,15 +253,12 @@
 ### Fixes
 
 - Fix rate limiting all data categories when data category rate-limit is active. (#8324)
+- Fix EXC_BAD_ACCESS in SentryNetworkTracker caused by repeated reads of the volatile `NSURLSessionTask.currentRequest` property (#8058)
 
 ### Features
 
 - Record log_byte client reports (#8186)
 - Add scope feature flag API (#8147)
-
-### Fixes
-
-- Fix EXC_BAD_ACCESS in SentryNetworkTracker caused by repeated reads of the volatile `NSURLSessionTask.currentRequest` property (#8058)
 
 ## 9.19.1
 
@@ -2218,14 +2289,11 @@ This bug caused unhandled/crash events to have the unhandled property and mach i
 
 - Add `reportAccessibilityIdentifier` option (#4183)
 - Record dropped spans (#4172)
+- Collect only unique UIWindow references (#4159)
 
 ### Fixes
 
 - Session replay crash when writing the replay (#4186)
-
-### Features
-
-- Collect only unique UIWindow references (#4159)
 
 ### Deprecated
 
@@ -3033,8 +3101,6 @@ This change might mark 3rd party library frames as in-app, which the SDK previou
 
 This version adds a dependency on Swift.
 We renamed the default branch from `master` to `main`. We are going to keep the `master` branch for backwards compatibility for package managers pointing to the `master` branch.
-
-### Features
 
 - Properly demangle Swift class name (#2162)
 - Change view hierarchy attachment format to JSON (#2491)
