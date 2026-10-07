@@ -1,5 +1,15 @@
 # Changelog
 
+## 9.30.1
+
+### Fixes
+
+- Fix app freeze during crash handling when attaching a crash-time screenshot or view hierarchy with a Swift (MainActor) scene delegate under UIScene (#9282)
+- Parse crash reports whose NSException reason exceeds the previous 150KB JSON string buffer, and truncate the exception value to 512 characters so the event stays within the 1MiB ingestion limit (#9256)
+- Report MetricKit events with the app and OS versions the diagnostic was recorded on instead of the versions running when MetricKit delivered it. The app context of these events only carries the identifier, version and build, and the OS context only the name, version and build, because the other attributes of the running app and device are unknown for the diagnostic (#9266)
+- Avoid evaluating Swift SDK debug, info, warning, and error log messages when logging is disabled or filtered by the diagnostic level (#9283)
+- Remove SDK frames from current-thread stacktraces when the SDK is loaded from the `SentryObjC` framework or dylib (#9286)
+
 ## 9.30.0
 
 ### Features
@@ -19,6 +29,7 @@
 
 - Keep standalone `@objc` extensions in static builds by adding referenced dummy `NSObject` subclasses, and lint for this with a SwiftSyntax SwiftLint extra rule (#9160)
 - Send envelopes captured during a connectivity-triggered cache drain without waiting for another trigger (#9171)
+- Session Replay: Fix queue requirements during crash recovery (#9158)
 - Preserve full resolution when masking feedback, error, and crash screenshots, including screenshots captured through the React Native bridge, without changing Session Replay resolution or redactions (#9179)
 - Compact raw MetricKit diagnostic attachments to reduce their upload size and attachment quota usage (#9183)
 
