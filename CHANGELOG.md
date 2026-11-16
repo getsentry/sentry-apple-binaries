@@ -1,5 +1,55 @@
 # Changelog
 
+## 9.30.2
+
+### Fixes
+
+- Fix a data race on the span end timestamp that could crash in `SentryTracer.trimEndTimestamp` when a child span finishes on another thread while its transaction finishes (#9305)
+- Validate feedback payloads before transport and align the managed form's message counter and errors with the cross-SDK input validation specification (#8973)
+- Read the initial `UIApplication.applicationState` asynchronously on the main queue when the SDK's dependency container is first accessed off the main thread, instead of blocking the calling thread while waiting for the main thread during app launch (#9304)
+- Prevent crash report buffer overflows when flushing pending data fails (#9317)
+- Exempt symbol images from Session Replay masking using the public `isSymbolImage` API without inspecting their image assets (#9335)
+- Fix an `EXC_BAD_ACCESS` crash while reading the cellular network technology on iOS. The SDK now copies the value from CoreTelephony under the lock that CoreTelephony uses to change it (#9332)
+- Avoid crash-handler deadlocks caused by SDK debug logging or NSException backtrace memory management while other threads are suspended (#9324)
+  - Prepare NSException backtraces before suspending other threads, and resume them before releasing the backtrace buffer.
+  - NSException-monitor debug and warning diagnostics now use the async-safe logger's compile-time threshold (`ERROR` by default), so runtime debug options no longer enable them.
+- Prevent Session Replay image redaction from changing archived images' rendered size while preserving masking exemptions for bundled images and system symbols (#9344)
+- Fix an `EXC_BAD_ACCESS` crash in `cow_cleanup` when a `URLSessionTask` changes state while another thread writes protocol properties into its request. The network tracker now reads the task's requests without copying them to Swift `URLRequest` values (#9343)
+- Prevent crash report buffer overflows and file descriptor leaks when the report writer receives file descriptor zero (#9341)
+
+## 9.30.1
+
+### Fixes
+
+- Fix app freeze during crash handling when attaching a crash-time screenshot or view hierarchy with a Swift (MainActor) scene delegate under UIScene (#9282)
+- Parse crash reports whose NSException reason exceeds the previous 150KB JSON string buffer, and truncate the exception value to 512 characters so the event stays within the 1MiB ingestion limit (#9256)
+- Report MetricKit events with the app and OS versions the diagnostic was recorded on instead of the versions running when MetricKit delivered it. The app context of these events only carries the identifier, version and build, and the OS context only the name, version and build, because the other attributes of the running app and device are unknown for the diagnostic (#9266)
+- Avoid evaluating Swift SDK debug, info, warning, and error log messages when logging is disabled or filtered by the diagnostic level (#9283)
+- Remove SDK frames from current-thread stacktraces when the SDK is loaded from the `SentryObjC` framework or dylib (#9286)
+
+## 9.30.0
+
+### Features
+
+- Update option stability without changing defaults (#9134, #9175):
+  - `enableUnhandledCPPExceptionsV2` remains non-deprecated under `options.experimental` in v9, disabled by default, with dictionary-based initialization support.
+  - `enablePersistingTracesWhenCrashing` is now stable and remains disabled by default.
+  - `attachViewHierarchy` is now stable and remains disabled by default.
+  - `enableTimeToFullDisplayTracing` is now stable and remains disabled by default because applications must explicitly call `SentrySDK.reportFullyDisplayed()`.
+  - `swiftAsyncStacktraces` is now stable and remains disabled by default.
+  - `enableGraphQLOperationTracking` is now stable and remains disabled by default.
+  - `enableFileManagerSwizzling` is now stable, remains disabled by default, and supports dictionary-based initialization.
+- Add `connection_type` to the device context of events, which reports `wifi`, `ethernet`, `cellular`, or `none` (#9097).
+  On iOS, cellular connections additionally report the network technology in `connection_effective_type`, for example `4g` or `5g`.
+
+### Fixes
+
+- Keep standalone `@objc` extensions in static builds by adding referenced dummy `NSObject` subclasses, and lint for this with a SwiftSyntax SwiftLint extra rule (#9160)
+- Send envelopes captured during a connectivity-triggered cache drain without waiting for another trigger (#9171)
+- Session Replay: Fix queue requirements during crash recovery (#9158)
+- Preserve full resolution when masking feedback, error, and crash screenshots, including screenshots captured through the React Native bridge, without changing Session Replay resolution or redactions (#9179)
+- Compact raw MetricKit diagnostic attachments to reduce their upload size and attachment quota usage (#9183)
+
 ## 9.29.2
 
 ### Fixes
