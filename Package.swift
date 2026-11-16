@@ -12,13 +12,13 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "Sentry-Static",
-            url: "https://github.com/getsentry/sentry-cocoa/releases/download/9.34.0/Sentry.xcframework.zip",
-            checksum: "1ee80dfb1bd94295f419a7a026467ce35a68143fb8da9f5e672264546b8f7c0d" //Sentry-Static
+            url: "https://github.com/getsentry/sentry-cocoa/releases/download/9.29.3/Sentry.xcframework.zip",
+            checksum: "843b01666de4e4a0e7a1574abdcd6823d878032ee6ed1c03304c8f289c59447d" //Sentry-Static
         ),
         .binaryTarget(
             name: "SentryObjC-Static",
-            url: "https://github.com/getsentry/sentry-cocoa/releases/download/9.34.0/SentryObjC-Static.xcframework.zip",
-            checksum: "bdb0f88a7a7728a4af0948ca9a689582d2fc1baecdb8a9953edd9125711a3f49" //SentryObjC-Static
+            url: "https://github.com/getsentry/sentry-cocoa/releases/download/9.29.3/SentryObjC-Static.xcframework.zip",
+            checksum: "3a5ad02b1ae27a1d1314edd2d6fce91757143a71433cc55af352aa6db4c32b93" //SentryObjC-Static
         ),
         .target(
             name: "SentryCppHelper",
